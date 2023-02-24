@@ -10,9 +10,12 @@ import time
 import requests
 from my_fake_useragent import UserAgent
 
-#
 from srun_base64 import *
 from srun_xencode import *
+
+# User info
+username = ''
+password = ''
 
 # Browser User Agent
 ua = UserAgent(family='chrome')
@@ -39,10 +42,6 @@ time_stamp = str(int(time.time() * 100))
 # Login parameters , base64 info
 # This is a fixed encoding for generating the accession key parameters
 info = ''
-
-# username
-username = ''
-password = ''
 
 # ip
 ip = ''
@@ -105,7 +104,8 @@ def challenge():
 
 def user_data_collect(y):
     x = {}
-    x['user_name'] = y['user_name']
+    # Show username or not.
+    # x['user_name'] = y['user_name']
     trans_time = time.localtime(y['add_time'])
     trans_time = time.strftime("%Y-%m-%d %H:%M:%S", trans_time)
     x['Last login time'] = trans_time
@@ -126,7 +126,7 @@ def md5_calculation():
 def sha1_calculation():
     global token, password, username, info
     chksum = token + username + token + md5.replace('{MD5}',
-                                                   '') + token + '4' + token + ip + token + '200' + token + '1' + token + info
+                                                    '') + token + '4' + token + ip + token + '200' + token + '1' + token + info
     # print(chksum)
     return hashlib.sha1(chksum.encode()).hexdigest()
 
@@ -137,7 +137,7 @@ def get_info():
         "username": username,
         "password": password,
         "ip": ip,
-        "acid": '4',
+        "acid": '1',
         "enc_ver": enc
     }
     i = re.sub("'", '"', str(info_temp))
