@@ -1,5 +1,5 @@
-# Author inokoe , 2023/2/21
-# The first version, without sufficient validation！
+# Author inokoe , 2023/4/7
+# https://github.com/inokoe/xju-portal-certification.git
 import hashlib
 import hmac
 import json
@@ -12,10 +12,11 @@ from my_fake_useragent import UserAgent
 
 from srun_base64 import *
 from srun_xencode import *
+import sys
 
 # User info
-username = ''
-password = ''
+username = sys.argv[1]
+password = sys.argv[2]
 
 # Browser User Agent
 ua = UserAgent(family='chrome')
@@ -41,6 +42,10 @@ time_stamp = str(int(time.time() * 100))
 
 # Login parameters , base64 info
 # This is a fixed encoding for generating the accession key parameters
+
+# ac_id parameter control of different areas(different model)
+ac_id = '4'
+
 info = ''
 
 # ip
@@ -126,7 +131,7 @@ def md5_calculation():
 def sha1_calculation():
     global token, password, username, info
     chksum = token + username + token + md5.replace('{MD5}',
-                                                    '') + token + '4' + token + ip + token + '200' + token + '1' + token + info
+                                                    '') + token + ac_id + token + ip + token + '200' + token + '1' + token + info
     # print(chksum)
     return hashlib.sha1(chksum.encode()).hexdigest()
 
@@ -152,7 +157,7 @@ def login():
     # print("chksum", chksum)
     my_params = {'callback': "jQuery" + callback, '_': time_stamp, 'action': 'login', 'username': username,
                  'password': md5, 'os': 'Windows 10', 'name': 'Windows', 'double_stack': '1', 'chksum': chksum,
-                 'ac_id': '4', 'ip': ip, 'n': '200', 'type': '1', 'info': info}
+                 'ac_id': ac_id, 'ip': ip, 'n': '200', 'type': '1', 'info': info}
     # print(my_params)
     response = requests.get(url_maker(domain_suffix['login']), timeout=5, headers=headers, params=my_params)
     if response.status_code == 200:
@@ -162,8 +167,10 @@ def login():
             print('Login Success')
             time.sleep(2)
             show_user_info(catch_user_info().text)
+            return False
         else:
             print('Login Failed Cause - ', response['error'])
+            return True
 
 
 def show_user_info(y):
@@ -183,6 +190,7 @@ def show_all_details():
 
 if __name__ == '__main__':
     print("running .....")
+    print(sys.argv[0])
     if username == '' or password == '':
         print('No user info set!')
         exit(0)
@@ -201,9 +209,17 @@ if __name__ == '__main__':
                 print(user_data_collect(res_text))
             else:
                 print("Verification is required before login.")
+                print('------Try Dormitory Param------')
                 if challenge():
                     md5 = '{MD5}' + md5_calculation()
-                    login()
+                    result = login()
+                    if result:
+                        print('------Try Teaching area Param------')
+                        ac_id = '1'
+                        time_stamp = str(int(time.time() * 1000))
+                        result = login()
+                        if result:
+                            print('--Unfortunately, the script did not write parameters to handle this situation.--')
 
     print('... (_ Exit _)...')
     time.sleep(3)
